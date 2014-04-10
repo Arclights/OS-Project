@@ -71,14 +71,11 @@ void* malloc1(size_t size){
 		}else if(q->size > size){
 			printf("greater\t%zd > %zd\n",q->size, size);
 			// Split the chunk
-			// list_t* t= q + sizeof(list_t);
 			out = (char*)q + sizeof(list_t);
 			p->next = out + size; // Sets p->next to the memory chunk after the picked chunk
 			p->next->size = q->size - size; // The size of the p->next chunk is the remaining size of when a chunk of size size is removed
 			p->next->next = q->next;
 			q->size = size; // The returned chunk has size size
-			printf("q->size %zd\n", q->size);
-			printf("Returning\n");
 			break;
 		}
 
@@ -92,10 +89,6 @@ void* malloc1(size_t size){
 				printf("errno\n");
 				return NULL;
 			}
-			// p->next = pb;
-			// pb->size = size;
-			// printf("q->size %zd\n", q->size);
-			// Increase N???
 			pb->size = size;
 			out = (char*)pb + sizeof(list_t);
 			break;
@@ -120,12 +113,10 @@ void* realloc1(void *ptr, size_t size){
 }
 
 void free1(void *ptr){
-	printf("Freeing\n");
 	list_t* r = (char*)ptr - sizeof(list_t);
+	printf("Freeing size: %zd\n", r->size);
 	list_t* p = &avail;
 	list_t* q = p->next;
-
-	printf("Freeing size: %zd\n", r->size);
 
 	while(q != NULL){
 		if(r < q){

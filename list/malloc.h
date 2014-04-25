@@ -1,9 +1,9 @@
 #include <stddef.h>
 
-void* malloc1(size_t size);
-void* calloc1(size_t nitems, size_t size);
-void* realloc1(void *ptr, size_t size);
-void free1(void* ptr);
+void* malloc(size_t size);
+void* calloc(size_t nitems, size_t size);
+void* realloc(void *ptr, size_t size);
+void free(void* ptr);
 
 void check_all_freed();
 void print_list();

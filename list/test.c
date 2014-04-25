@@ -13,10 +13,10 @@ void use_space(int* ptr, size_t size)
 void test_malloc(int test_nbr, size_t size)
 {
 	printf("Test malloc %d with size %zd\n", test_nbr, size);
-	void* a = malloc1(size);
+	void* a = malloc(size);
 	assert(a != NULL);
 	use_space(a, size/sizeof(int));
-	free1(a);
+	free(a);
 	check_all_freed();
 	a = NULL;
 	printf("\n");	
@@ -25,12 +25,18 @@ void test_malloc(int test_nbr, size_t size)
 int main()
 {
 	size_t size;
-	int i = 1;	
+	int i = 1;
+
+	printf("Testing printf 1\n");
+
+	printf("Testing %s\n", "printf 2");	
+
+	printf("Test printf passed\n");
 
 	check_all_freed();
 
 	printf("Tests NULL:\n");
-	assert(malloc1(0) == NULL);
+	assert(malloc(0) == NULL);
 	printf("\n");
 
 	print_list();
@@ -57,7 +63,7 @@ int main()
 
 	printf("Test calloc\n");
 	size = 1024;
-	a = calloc1(size, sizeof(int));
+	a = calloc(size, sizeof(int));
 	use_space(a, size);
 	assert(a != NULL);
 	printf("\n");
@@ -66,10 +72,10 @@ int main()
 
 	printf("Test realloc\n");
 	size = 2000;
-	a = realloc1(a, size*sizeof(int));
+	a = realloc(a, size*sizeof(int));
 	assert(a != NULL);
 	use_space(a, size);
-	free1(a);
+	free(a);
 	check_all_freed();
 	a = NULL;
 	printf("\n");

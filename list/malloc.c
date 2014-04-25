@@ -43,13 +43,9 @@ void print_list()
 }
 /*******************************/
 
-int is_last(void* place){
-	// return &avail + N > place;
-	return place == NULL;
-}
-
 // Alignment
-void* malloc1(size_t size){
+void* malloc(size_t size){
+	printf("malloc\n");
 
 	if(size == 0){
 		return NULL;
@@ -63,13 +59,13 @@ void* malloc1(size_t size){
 
 	for(;;){
 		if(q->size == size){
-			printf("equal\n");
+			printf("\tequal\n");
 			// Take the entire chunk
 			out = (char*)q + sizeof(list_t);
 			p->next = q->next;
 			break;
 		}else if(q->size > size){
-			printf("greater\t%zd > %zd\n",q->size, size);
+			printf("\tgreater\t%zd > %zd\n",q->size, size);
 			// Split the chunk
 			out = (char*)q + sizeof(list_t);
 			p->next = out + size; // Sets p->next to the memory chunk after the picked chunk
@@ -82,11 +78,11 @@ void* malloc1(size_t size){
 		p = q;
 		q = p->next;
 
-		if(is_last(q)){
-			printf("last\n");
+		if(q == NULL){
+			printf("\tlast\n");
 			list_t* pb = sbrk(size);
 			if(errno == ENOMEM){
-				printf("errno\n");
+				printf("\t\terrno\n");
 				return NULL;
 			}
 			pb->size = size;
@@ -99,22 +95,31 @@ void* malloc1(size_t size){
 	return out;
 }
 
-void* calloc1(size_t nitems, size_t size){
-	void* ptr = malloc1(nitems * size);
+void* calloc(size_t nitems, size_t size){
+	printf("calloc\n");
+	void* ptr = malloc(nitems * size);
 	return memset(ptr, 0, nitems);
 }
 
-void* realloc1(void *ptr, size_t size){
-	void* ptr_to = malloc1(size);
+void* realloc(void *ptr, size_t size){
+	printf("realloc\n");
+	void* ptr_to = malloc(size);
 	if(ptr != NULL){
 		return memcpy(ptr_to, ptr, size);
 	}
 	return NULL;
 }
 
-void free1(void *ptr){
+void free(void* ptr){
+	printf("free\n");
+
+	if(ptr == NULL){
+		// printf("\tptr == NULL\n");
+		return;
+	}
+
 	list_t* r = (char*)ptr - sizeof(list_t);
-	printf("Freeing size: %zd\n", r->size);
+	// printf("Freeing size: %zd\n", r->size);
 	list_t* p = &avail;
 	list_t* q = p->next;
 
@@ -122,7 +127,6 @@ void free1(void *ptr){
 		if(r < q){
 			p->next = r;
 			r->next = q;
-			return;
 		}
 
 		p = q;
@@ -130,5 +134,5 @@ void free1(void *ptr){
 	}
 	p->next = r;
 	r->next = q;
-	printf("Freeing failed\n");
+	// printf("Freeing failed\n");
 }

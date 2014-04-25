@@ -2,50 +2,38 @@
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
+#include <math.h>
 
-#define N (8 * 1024*1024 / sizeof(size_t))
+#define N (9)
 
-typedef struct list_t list_t;
+typedef struct block_t block_t;
 
-struct list_t {
-	size_t size; /* size including list_t */
-	list_t* next; /* next available block . */
-	char data[]; /* C99 flexible array. */
+struct block_t {
+	unsigned 	reserved:1; /* one if reserved. */
+	char 		kval; 		/* current value of K. */
+	block_t* 	succ; 		/* successor block in list. */
+	block_t* 	pred; 		/* predecessor block in list. */
 };
 
-static size_t pool[N] = { N * sizeof pool[0] };
-static list_t avail = { .next = (list_t*)pool };
+static block_t freelists[N];
+
 
 // For testing
 /*******************************/
-void check_all_freed()
+void print_blocks()
 {
-	list_t* p = avail.next;
 
-	while(p->next != NULL){
-		if(p->next + p->next->size + sizeof(size_t) != p->next){
-			printf("Not everything freed\n");
-			break;
-		}
-	}
-}
-
-void print_list()
-{
-	list_t* p = &avail;
-	printf("The list\n");
-	int i = 0;
-	while(p->next != NULL){
-		printf("Node %d\tmem: %d\tsize: %d\n", i++, p->next, p->next->size);
-		p = p->next;
-	}
-	printf("\n");
 }
 /*******************************/
 
-int is_last(void* place){
-	// return &avail + N > place;
-	return place == NULL;
+size_t transform_to_closest_2_pow(size_t* size)
+{
+	size_t k = 1;
+	while(pow(2.0, k) < *size){
+		++k;
+	}
+	*size = (int)pow(2.0, k);
+	return k;
 }
 
 // Alignment
@@ -54,54 +42,43 @@ void* malloc1(size_t size){
 	if(size == 0){
 		return NULL;
 	}
+	size_t k = transform_to_closest_2_pow(&size);
+	printf("new size: %zd\n", size);
+	printf("k: %zd\n", k);
 
-	size = size + sizeof(list_t);
-	list_t* p = &avail;
-	list_t* q = p->next;
-
-	void* out;
-
-	for(;;){
-		if(q->size == size){
-			printf("equal\n");
-			// Take the entire chunk
-			out = (char*)q + sizeof(list_t);
-			p->next = q->next;
-			break;
-		}else if(q->size > size){
-			printf("greater\t%zd > %zd\n",q->size, size);
-			// Split the chunk
-			out = (char*)q + sizeof(list_t);
-			p->next = out + size; // Sets p->next to the memory chunk after the picked chunk
-			p->next->size = q->size - size; // The size of the p->next chunk is the remaining size of when a chunk of size size is removed
-			p->next->next = q->next;
-			q->size = size; // The returned chunk has size size
+	int j;
+	for(j = k; j < N; ++j){
+		if(&freelists[j] != NULL){
 			break;
 		}
-
-		p = q;
-		q = p->next;
-
-		if(is_last(q)){
-			printf("last\n");
-			list_t* pb = sbrk(size);
-			if(errno == ENOMEM){
-				printf("errno\n");
-				return NULL;
-			}
-			pb->size = size;
-			out = (char*)pb + sizeof(list_t);
-			break;
-		}
-
 	}
 
-	return out;
+	if(j == N){
+		return NULL;
+	}
+
+	block_t block = freelists[j];
+	block_t* old_block_pred = block.pred;
+	if(block.pred != NULL){
+		block.pred->succ = block.succ;
+	}
+	if(block.succ != NULL){
+		block.succ->pred = old_block_pred;
+	}
+	int i;
+	for(i = k + 1; i < j; ++i){
+		
+	}
+
+	return NULL;
 }
 
 void* calloc1(size_t nitems, size_t size){
 	void* ptr = malloc1(nitems * size);
-	return memset(ptr, 0, nitems);
+	if(ptr != NULL){
+		return memset(ptr, 0, nitems);
+	}
+	return ptr;
 }
 
 void* realloc1(void *ptr, size_t size){
@@ -109,26 +86,9 @@ void* realloc1(void *ptr, size_t size){
 	if(ptr != NULL){
 		return memcpy(ptr_to, ptr, size);
 	}
-	return NULL;
+	return ptr;
 }
 
 void free1(void *ptr){
-	list_t* r = (char*)ptr - sizeof(list_t);
-	printf("Freeing size: %zd\n", r->size);
-	list_t* p = &avail;
-	list_t* q = p->next;
 
-	while(q != NULL){
-		if(r < q){
-			p->next = r;
-			r->next = q;
-			return;
-		}
-
-		p = q;
-		q = q->next;
-	}
-	p->next = r;
-	r->next = q;
-	printf("Freeing failed\n");
 }

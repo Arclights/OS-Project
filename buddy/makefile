@@ -9,7 +9,7 @@ OUT		= test
 OBJS		= test.o malloc.o
 
 all: $(OBJS)
-	$(CC) $(LDFLAGS) $(OBJS) -o $(OUT) -g
+	$(CC) $(LDFLAGS) $(OBJS) -o $(OUT) -lm
 check: all
 clean:
 	rm -f *.o test

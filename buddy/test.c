@@ -66,8 +66,17 @@ void test_example(){
 	print_blocks();
 	printf("\n");
 	free(b);
+	printf("After:\n");
+	print_blocks();
+	printf("\n");
 	free(d);
+	printf("After:\n");
+	print_blocks();
+	printf("\n");
 	free(c);
+	printf("After:\n");
+	print_blocks();
+	printf("\n");
 }
 
 int main()

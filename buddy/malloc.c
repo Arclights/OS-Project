@@ -56,6 +56,29 @@ size_t transform_to_closest_2_pow(size_t* size)
 	return k;
 }
 
+void remove_from_freelist(int freelist, block_t* block){
+	printf("remove %zd\n", block);
+	if(block->succ != NULL){
+		printf("block->succ != NULL\n");
+		block->succ->pred = block->pred;
+	}
+	if(block->pred != NULL){
+		printf("block->pred != NULL\n");
+		block->pred->succ = block->succ;
+	}else{
+		freelists[freelist] = block->succ;
+	}
+	block->pred = NULL;
+	block->succ = NULL;
+}
+
+void add2freelist(int freelist, block_t* block){
+	block->pred = NULL;
+	block->succ = freelists[freelist];
+	freelists[freelist] = block;
+
+}
+
 // Alignment
 void* malloc(size_t size){
 	printf("Malloc\n");
@@ -88,34 +111,21 @@ void* malloc(size_t size){
 		size_t s = 1 << (i-1);
 		printf("s: %zd\n", s);
 		block = freelists[i];
-		freelists[i] = block->succ;
-		if(freelists[i] != NULL){
-			freelists[i]->pred = NULL;
-		}
+		remove_from_freelist(i, block);
 
 		block_t* new_block = ((char*)block)+s;		// Split in two
-		block->succ = new_block;
-		printf("block: %zd\n", block);
-		printf("new_block: %zd\n", new_block);
-		printf("block->kval: %zd\n", block->kval);
-		printf("block->succ->succ: %zd\n", block->succ->succ);
-		block->succ->succ = freelists[i-1];
-		if(block->succ->succ != NULL){
-			block->succ->succ->pred = block+s;
-		}
 		block->kval = i-1;
 		new_block->kval = i-1;
-		freelists[i-1] = block;
+		add2freelist(i-1, new_block);
+		add2freelist(i-1, block);
 		print_blocks();
 	}
 
 	block_t* out = freelists[k];
-	freelists[k] = out->succ;
-	if(freelists[k] != NULL){
-		freelists[k]->pred = NULL;
-	}
+	remove_from_freelist(k, out);
 	printf("out: %zd\n", out);
 	printf("%zd\n", out->kval);
+	out->reserved = 1;
 	return out;
 }
 
@@ -137,19 +147,6 @@ void* realloc(void *ptr, size_t size){
 	return ptr;
 }
 
-void add2freelist(int freelist, block_t* block){
-	block_t* b = freelists[freelist];
-	block_t* succ_block = b->succ;
-	while(succ_block != NULL){
-		b = succ_block;
-		succ_block = b->succ;
-	}
-	b->succ = block;
-	block->pred = b;
-	block->succ = NULL;
-
-}
-
 void merge_blocks(block_t* block){
 	size_t start = (size_t)&memory;
 	size_t pointer = (size_t)block;
@@ -160,14 +157,22 @@ void merge_blocks(block_t* block){
 	printf("block->kval: %zd\n", block->kval);
 	printf("buddy->kval: %zd\n", buddy->kval);
 	printf("buddy->kval == block->kval: %zd\n", buddy->kval == block->kval);
+	printf("!buddy->reserved: %zd\n", !buddy->reserved);
 
 	if(buddy->kval == block->kval && !buddy->reserved){
+		remove_from_freelist(K, block);
+		remove_from_freelist(K ,buddy);
+		printf("After remove:\n");
+		print_blocks();
 		if(buddy > block){
 			block->kval = block->kval + 1;
-
+			add2freelist(block->kval, block);
+			print_blocks();
 			merge_blocks(block);
 		}else{
 			buddy->kval = buddy->kval + 1;
+			add2freelist(buddy->kval, buddy);
+			print_blocks();
 			merge_blocks(buddy);
 		}
 	}
@@ -176,6 +181,7 @@ void merge_blocks(block_t* block){
 void free(void* ptr){
 	printf("Free\n");
 	block_t* block = (block_t*) ptr;
+	printf("Block size: %zd\n", block->kval);
 	add2freelist(block->kval, block);
 	block->reserved = 0;
 	merge_blocks(block);

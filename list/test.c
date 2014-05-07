@@ -17,7 +17,7 @@ void test_malloc(int test_nbr, size_t size)
 	assert(a != NULL);
 	use_space(a, size/sizeof(int));
 	free(a);
-	check_all_freed();
+	// check_all_freed();
 	a = NULL;
 	printf("\n");	
 }
@@ -36,7 +36,7 @@ int main()
 	check_all_freed();
 
 	printf("Tests NULL:\n");
-	assert(malloc(0) == NULL);
+	assert(malloc(0) != NULL);
 	printf("\n");
 
 	print_list();
@@ -61,6 +61,44 @@ int main()
 
 	void* a;
 
+	printf("Testing multiple mallocs\n");
+	a = malloc(10);
+	assert(a != NULL);
+	use_space(a, 10/sizeof(int));
+	print_list();
+	void* b = malloc(20);
+	assert(b != NULL);
+	use_space(b, 20/sizeof(int));
+	print_list();
+	void* c = malloc(30);
+	assert(c != NULL);
+	use_space(c, 30/sizeof(int));
+	print_list();
+	void* d = malloc(40);
+	assert(d != NULL);
+	use_space(d, 40/sizeof(int));
+	print_list();
+	void* e = malloc(50);
+	assert(e != NULL);
+	use_space(e, 50/sizeof(int));
+	print_list();
+	void* f = malloc(60);
+	assert(f != NULL);
+	use_space(f, 60/sizeof(int));
+	print_list();
+	void* g = malloc(70);
+	assert(g != NULL);
+	use_space(g, 70/sizeof(int));
+	print_list();
+	free(a);
+	free(b);
+	free(c);
+	free(d);
+	free(e);
+	free(f);
+	free(g);
+	printf("\n");
+
 	printf("Test calloc\n");
 	size = 1024;
 	a = calloc(size, sizeof(int));
@@ -70,8 +108,17 @@ int main()
 
 	print_list();
 
-	printf("Test realloc\n");
+	printf("Test realloc1\n");
 	size = 2000;
+	a = realloc(a, size*sizeof(int));
+	assert(a != NULL);
+	use_space(a, size);
+	printf("\n");
+
+	print_list();
+
+	printf("Test realloc2\n");
+	size = 1000;
 	a = realloc(a, size*sizeof(int));
 	assert(a != NULL);
 	use_space(a, size);
@@ -79,8 +126,39 @@ int main()
 	check_all_freed();
 	a = NULL;
 	printf("\n");
+
+	print_list();
+
+	printf("Test realloc3\n");
+	a = realloc(NULL, 0);
+	assert(a != NULL);
+	printf("\n");
 	
 	print_list();
+
+	printf("Freeing an allready freed pointer\n");
+	a = malloc(10);
+	free(a);
+	print_list();
+	free(a);
+	print_list();
+
+	// printf("Test really large amount of mallocs\n");
+	// int mallocs = 1000;
+	// void* ptrs[mallocs];
+	// for(i = 0; i < mallocs; ++i){
+	// 	ptrs[i] = malloc(100000);
+	// }
+	// ptrs[mallocs/2] = realloc(ptrs[mallocs/2], 500);
+	// for(i = 0; i < mallocs; ++i){
+	// 	free(ptrs[i]);
+	// }
+	// printf("\n");
+	
+	print_list();	
+
+	printf("sizeof(size_t): %zd\n", sizeof(size_t));
+	printf("sizeof(char): %zd\n", sizeof(char));
 
 	return 0;
 }

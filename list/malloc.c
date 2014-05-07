@@ -24,7 +24,7 @@ void check_all_freed()
 
 	while(p->next != NULL){
 		if(p->next + p->next->size + sizeof(size_t) != p->next){
-			printf("Not everything freed\n");
+			// printf("Not everything freed\n");
 			break;
 		}
 	}
@@ -32,11 +32,11 @@ void check_all_freed()
 
 void print_list()
 {
-	list_t* p = &avail;
+	list_t* p = (&avail)->next;
 	printf("The list\n");
 	int i = 0;
-	while(p->next != NULL){
-		printf("Node %d\tmem: %d\tsize: %d\n", i++, p->next, p->next->size);
+	while(p != NULL){
+		printf("Node %d\tmem: %d\tsize: %d\n", i++, p, p->size);
 		p = p->next;
 	}
 	printf("\n");
@@ -47,9 +47,9 @@ void print_list()
 void* malloc(size_t size){
 	printf("malloc\n");
 
-	if(size == 0){
-		return NULL;
-	}
+	// if(size == 0){
+	// 	return NULL;
+	// }
 
 	size = size + sizeof(list_t);
 	list_t* p = &avail;
@@ -64,11 +64,10 @@ void* malloc(size_t size){
 			out = (char*)q + sizeof(list_t);
 			p->next = q->next;
 			break;
-		}else if(q->size > size){
+		}else if(q->size - sizeof(list_t) > size){
 			printf("\tgreater\t%zd > %zd\n",q->size, size);
-			// Split the chunk
 			out = (char*)q + sizeof(list_t);
-			p->next = out + size; // Sets p->next to the memory chunk after the picked chunk
+			p->next = (char*)q + size; // Sets p->next to the memory chunk after the picked chunk
 			p->next->size = q->size - size; // The size of the p->next chunk is the remaining size of when a chunk of size size is removed
 			p->next->next = q->next;
 			q->size = size; // The returned chunk has size size
@@ -98,28 +97,22 @@ void* malloc(size_t size){
 void* calloc(size_t nitems, size_t size){
 	printf("calloc\n");
 	void* ptr = malloc(nitems * size);
-	return memset(ptr, 0, nitems);
-}
-
-void* realloc(void *ptr, size_t size){
-	printf("realloc\n");
-	void* ptr_to = malloc(size);
 	if(ptr != NULL){
-		return memcpy(ptr_to, ptr, size);
+		return memset(ptr, 0, nitems);
 	}
-	return NULL;
+	return ptr;
 }
 
 void free(void* ptr){
 	printf("free\n");
 
 	if(ptr == NULL){
-		// printf("\tptr == NULL\n");
+		printf("\tptr == NULL\n");
 		return;
 	}
 
 	list_t* r = (char*)ptr - sizeof(list_t);
-	// printf("Freeing size: %zd\n", r->size);
+	printf("Freeing size: %zd\n", r->size);
 	list_t* p = &avail;
 	list_t* q = p->next;
 
@@ -127,12 +120,26 @@ void free(void* ptr){
 		if(r < q){
 			p->next = r;
 			r->next = q;
+			return;
 		}
 
 		p = q;
 		q = q->next;
 	}
 	p->next = r;
+	if(r->next==NULL){
+		printf("r->next==NULL\n");
+	}
 	r->next = q;
 	// printf("Freeing failed\n");
+}
+
+void* realloc(void *ptr, size_t size){
+	printf("realloc\n");
+	void* out = malloc(size);
+	if(ptr != NULL){
+		out = memcpy(out, ptr, size);
+		free(ptr);
+	}
+	return out;
 }

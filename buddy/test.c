@@ -77,6 +77,7 @@ void test_example(){
 	printf("After:\n");
 	print_blocks();
 	printf("\n");
+	printf("Done with example tests\n");
 }
 
 int main()
@@ -99,7 +100,6 @@ int main()
 	// printf("\n");
 
 	test_example();
-	return 0;
 
 	test_malloc(i++, 1 * sizeof(int));
 	printf("\n");
@@ -112,9 +112,6 @@ int main()
 	test_malloc(i++, 4 * sizeof(int));
 	printf("\n");
 
-	test_malloc(i++, 1024*1024);
-	test_malloc(i++, 1024*1024*8);
-	test_malloc(i++, 1024*1024*8-16);
 
 	printf("Testing multiple mallocs\n");
 	void* a = malloc(10);
@@ -146,6 +143,9 @@ int main()
 	free(f);
 	free(g);
 	printf("\n");
+	printf("After:\n");
+	print_blocks();
+	printf("\n");
 
 	printf("Test calloc\n");
 	size = 1024;
@@ -153,13 +153,19 @@ int main()
 	use_space(a, size);
 	assert(a != NULL);
 	printf("\n");
+	printf("After:\n");
+	print_blocks();
+	printf("\n");
 
 
 	printf("Test realloc1\n");
-	size = 2000;
+	size = 3000;
 	a = realloc(a, size*sizeof(int));
 	assert(a != NULL);
 	use_space(a, size);
+	printf("\n");
+	printf("After:\n");
+	print_blocks();
 	printf("\n");
 
 
@@ -168,8 +174,14 @@ int main()
 	a = realloc(a, size*sizeof(int));
 	assert(a != NULL);
 	use_space(a, size);
+	printf("After:\n");
+	print_blocks();
+	printf("\n");
 	free(a);
 	a = NULL;
+	printf("\n");
+	printf("After:\n");
+	print_blocks();
 	printf("\n");
 
 
@@ -177,28 +189,28 @@ int main()
 	a = realloc(NULL, 0);
 	assert(a != NULL);
 	printf("\n");
+	printf("After:\n");
+	print_blocks();
+	printf("\n");
+	free(a);
+	printf("After:\n");
+	print_blocks();
+	printf("\n");
 	
 
 	printf("Freeing an allready freed pointer\n");
 	a = malloc(10);
+	printf("After:\n");
+	print_blocks();
+	printf("\n");
 	free(a);
+	printf("After:\n");
+	print_blocks();
+	printf("\n");
 	free(a);
-
-	// printf("Test really large amount of mallocs\n");
-	// int mallocs = 1000;
-	// void* ptrs[mallocs];
-	// for(i = 0; i < mallocs; ++i){
-	// 	ptrs[i] = malloc(100000);
-	// }
-	// ptrs[mallocs/2] = realloc(ptrs[mallocs/2], 500);
-	// for(i = 0; i < mallocs; ++i){
-	// 	free(ptrs[i]);
-	// }
-	// printf("\n");
-		
-
-	printf("sizeof(size_t): %zd\n", sizeof(size_t));
-	printf("sizeof(char): %zd\n", sizeof(char));
+	printf("After:\n");
+	print_blocks();
+	printf("\n");
 
 	return 0;
 }

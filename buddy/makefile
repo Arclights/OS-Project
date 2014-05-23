@@ -4,13 +4,13 @@ CFLAGS		= -g -Wall
 
 LDFLAGS		= -g
 
-OUT		= test
+OUT		= test2
 
-OBJS		= test.o malloc.o
+OBJS		= test2.o malloc.o
 
 all: $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS) -o $(OUT)
-	./test
+	./test2 10
 check: all
 clean:
-	rm -f *.o test
+	rm -f *.o test2
